@@ -120,25 +120,25 @@ export function DeviceEventHistory({
   };
 
   return (
-    <div className="rounded-3xl bg-white/95 dark:bg-[#070b14]/90 border border-slate-200/80 dark:border-cyan-500/20 p-4 sm:p-6 shadow-sm dark:shadow-[0_4px_30px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-colors">
+    <div className="w-full min-w-0 max-w-full rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-[#070b14]/90 border border-slate-200/80 dark:border-cyan-500/20 p-3 sm:p-6 shadow-sm dark:shadow-[0_4px_30px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-colors overflow-hidden">
       {/* Table Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-slate-200/80 dark:border-slate-800 min-w-0">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_#06b6d4]" />
-              Telemetry Event Stream
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_#06b6d4] shrink-0" />
+              <span>Telemetry Event Stream</span>
             </h3>
-            <span className="text-[11px] text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono font-semibold">
+            <span className="text-[11px] text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono font-semibold shrink-0">
               {events.length} logs
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-words">
             Real hardware state transitions and sensor signals logged to Supabase in IST
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <button
             onClick={onRefresh}
             disabled={isLoading}
@@ -159,13 +159,13 @@ export function DeviceEventHistory({
         </div>
       </div>
 
-      {/* Futuristic One-Tap Quick Filter Chips (Mobile First) */}
-      <div className="flex items-center gap-1.5 py-3 overflow-x-auto no-scrollbar border-b border-slate-100 dark:border-slate-800/50">
+      {/* Futuristic One-Tap Quick Filter Chips (Responsive 4-col Grid on Mobile, Flex on Desktop) */}
+      <div className="grid grid-cols-4 sm:flex items-center gap-1 sm:gap-2 py-3 border-b border-slate-100 dark:border-slate-800/50 w-full min-w-0">
         {[
-          { id: 'all', label: 'All Telemetry', icon: null },
-          { id: 'light', label: 'Smart Light', icon: Lightbulb },
-          { id: 'fan', label: 'Ceiling Fan', icon: Fan },
-          { id: 'motor', label: 'Toy Motor', icon: Cog },
+          { id: 'all', label: 'All Telemetry', shortLabel: 'All', icon: null },
+          { id: 'light', label: 'Smart Light', shortLabel: 'Light', icon: Lightbulb },
+          { id: 'fan', label: 'Ceiling Fan', shortLabel: 'Fan', icon: Fan },
+          { id: 'motor', label: 'Toy Motor', shortLabel: 'Motor', icon: Cog },
         ].map((chip) => {
           const Icon = chip.icon;
           const isSelected = filters.device === chip.id;
@@ -173,24 +173,25 @@ export function DeviceEventHistory({
             <button
               key={chip.id}
               onClick={() => handleFilterChange({ device: chip.id as any })}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all cursor-pointer min-w-0 truncate ${
                 isSelected
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 font-bold scale-[1.02]'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 font-bold scale-[1.01]'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/80 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-800'
               }`}
             >
-              {Icon && <Icon className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-slate-500'}`} />}
-              <span>{chip.label}</span>
+              {Icon && <Icon className={`w-3 h-3 shrink-0 ${isSelected ? 'text-white' : 'text-slate-500'}`} />}
+              <span className="sm:hidden truncate">{chip.shortLabel}</span>
+              <span className="hidden sm:inline whitespace-nowrap">{chip.label}</span>
             </button>
           );
         })}
       </div>
 
       {/* Filter Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 my-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 my-3.5 w-full min-w-0">
         {/* Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+        <div className="relative w-full min-w-0">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 shrink-0" />
           <input
             type="text"
             placeholder="Search source or value..."
@@ -204,7 +205,7 @@ export function DeviceEventHistory({
         <select
           value={filters.timeRange}
           onChange={(e) => handleFilterChange({ timeRange: e.target.value as any })}
-          className="px-3 py-2 text-xs bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white"
+          className="w-full min-w-0 px-3 py-2 text-xs bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white"
         >
           <option value="today">Today (IST)</option>
           <option value="yesterday">Yesterday (IST)</option>
@@ -216,7 +217,7 @@ export function DeviceEventHistory({
         <select
           value={filters.eventType}
           onChange={(e) => handleFilterChange({ eventType: e.target.value })}
-          className="px-3 py-2 text-xs bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white sm:col-span-2 lg:col-span-1"
+          className="w-full min-w-0 px-3 py-2 text-xs bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white sm:col-span-2 lg:col-span-1"
         >
           <option value="all">All Event Types</option>
           {availableEventTypes.map((type) => (
@@ -228,7 +229,7 @@ export function DeviceEventHistory({
       </div>
 
       {/* MOBILE PERSPECTIVE VIEW: Futuristic Cyber Event Feed (Visible on < md) */}
-      <div className="block md:hidden space-y-2.5">
+      <div className="block md:hidden space-y-2.5 w-full min-w-0">
         {paginatedEvents.length === 0 ? (
           <div className="py-10 text-center text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-slate-800">
             No matching events found for the selected filters.
@@ -237,7 +238,7 @@ export function DeviceEventHistory({
           paginatedEvents.map((ev) => (
             <div
               key={ev.id}
-              className={`p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-cyan-500/40 transition-all space-y-2 shadow-sm dark:shadow-md relative overflow-hidden ${
+              className={`p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 hover:border-cyan-500/40 transition-all space-y-2 shadow-sm dark:shadow-md relative overflow-hidden w-full min-w-0 ${
                 ev.device === 'light'
                   ? 'border-l-4 border-l-amber-500'
                   : ev.device === 'fan'
@@ -245,32 +246,34 @@ export function DeviceEventHistory({
                   : 'border-l-4 border-l-purple-500'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm">
+              {/* Top Row: Device icon + Device name + Event type tag + Source badge */}
+              <div className="flex items-center justify-between gap-1.5 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                  <div className="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                     {getDeviceIcon(ev.device)}
                   </div>
-                  <div>
-                    <span className="font-extrabold text-xs capitalize text-slate-900 dark:text-white tracking-wide">
-                      {ev.device}
-                    </span>
-                    <span className="ml-2 font-mono text-[10px] text-slate-600 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-800">
-                      {ev.event_type}
-                    </span>
-                  </div>
+                  <span className="font-extrabold text-xs capitalize text-slate-900 dark:text-white tracking-wide shrink-0">
+                    {ev.device}
+                  </span>
+                  <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-800 truncate">
+                    {ev.event_type}
+                  </span>
                 </div>
-                {getSourceBadge(ev.source)}
+                <div className="shrink-0">
+                  {getSourceBadge(ev.source)}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200/70 dark:border-slate-800/80">
-                <div className="font-medium text-slate-800 dark:text-slate-200">
+              {/* Bottom Row: State Value + Occurred At Timestamp (IST) */}
+              <div className="flex items-center justify-between gap-2 text-xs pt-1.5 border-t border-slate-200/70 dark:border-slate-800/80 min-w-0">
+                <div className="font-medium text-slate-800 dark:text-slate-200 min-w-0 flex-1 truncate">
                   {formatEventValue(ev)}
                 </div>
-                <div className="text-right">
-                  <div className="font-mono text-[11px] text-cyan-600 dark:text-cyan-300 font-semibold" suppressHydrationWarning>
+                <div className="text-right shrink-0">
+                  <div className="font-mono text-[10px] sm:text-[11px] text-cyan-600 dark:text-cyan-300 font-semibold whitespace-nowrap" suppressHydrationWarning>
                     {formatDateTime(ev.occurred_at)}
                   </div>
-                  <TimeAgo date={ev.occurred_at} className="block text-[10px] text-slate-500 dark:text-slate-400" />
+                  <TimeAgo date={ev.occurred_at} className="block text-[9px] text-slate-500 dark:text-slate-400" />
                 </div>
               </div>
             </div>
@@ -279,8 +282,8 @@ export function DeviceEventHistory({
       </div>
 
       {/* DESKTOP VIEW: Full 5-Column Table (Hidden on Mobile) */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-left text-xs">
+      <div className="hidden md:block overflow-x-auto w-full min-w-0">
+        <table className="w-full text-left text-xs min-w-[600px]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
               <th className="py-3 px-3">Device</th>
@@ -330,13 +333,13 @@ export function DeviceEventHistory({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-4 mt-2 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-4 mt-2 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 w-full min-w-0">
+        <div className="truncate">
           Showing {events.length === 0 ? 0 : startIndex + 1} to{' '}
           {Math.min(startIndex + ITEMS_PER_PAGE, events.length)} of {events.length} events
         </div>
 
-        <div className="flex items-center gap-2 self-center sm:self-auto">
+        <div className="flex items-center gap-2 self-center sm:self-auto shrink-0">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}

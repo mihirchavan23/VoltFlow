@@ -255,7 +255,7 @@ export default function SmartHomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Top Header with Integrated Top-Nav Tab Switcher */}
       <Header
         deviceId={deviceId}
@@ -274,7 +274,7 @@ export default function SmartHomePage() {
       />
 
       {/* Main Container */}
-      <div className="flex">
+      <div className="flex w-full min-w-0 max-w-full">
         {/* Desktop Left Sidebar (Synced with Top Nav) */}
         <Sidebar
           currentTab={currentTab}
@@ -288,19 +288,19 @@ export default function SmartHomePage() {
         />
 
         {/* Content Area */}
-        <main className="flex-1 max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 pb-12">
+        <main className="flex-1 w-full min-w-0 max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 pb-12 overflow-x-hidden">
           {/* Demo Mode Notice Banner if using mock */}
           {isUsingMock && (
-            <div className="mb-6 p-4 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-500">
+            <div className="mb-6 p-4 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm min-w-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-500 shrink-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 truncate">
                     Running in Local Demo / Offline Mode
                   </h4>
-                  <p className="text-xs text-amber-700/80 dark:text-amber-300/70 mt-0.5">
+                  <p className="text-xs text-amber-700/80 dark:text-amber-300/70 mt-0.5 break-words">
                     Connect your Supabase database anytime to switch to real-time cloud and ESP32 operations.
                   </p>
                 </div>
@@ -308,7 +308,7 @@ export default function SmartHomePage() {
 
               <button
                 onClick={() => setIsCredentialsOpen(true)}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer whitespace-nowrap"
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer whitespace-nowrap shrink-0"
               >
                 Configure Supabase
               </button>
@@ -317,32 +317,33 @@ export default function SmartHomePage() {
 
           {/* Pending Command Tracker Strip */}
           {pendingCommands.length > 0 && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-pulse">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                <span>
+            <div className="mb-6 p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-pulse min-w-0">
+              <div className="flex items-center gap-2 min-w-0 truncate">
+                <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                <span className="truncate">
                   <strong>{pendingCommands.length} command(s) pending:</strong>{' '}
                   {pendingCommands.map((c) => `${c.device} (${c.action})`).join(', ')}
                 </span>
               </div>
-              <span className="text-[11px] opacity-80">Awaiting ESP32 hardware acknowledgement</span>
+              <span className="text-[11px] opacity-80 shrink-0 ml-2">Awaiting ESP32 hardware acknowledgement</span>
             </div>
           )}
 
           {/* TAB 1: CONTROLS */}
           {currentTab === 'controls' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                <div>
+            <div className="w-full min-w-0 max-w-full space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800 min-w-0">
+                <div className="min-w-0">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span className="text-blue-500">⚡</span> Hardware Remote Controls
+                    <span className="text-blue-500 shrink-0">⚡</span>
+                    <span className="truncate">Hardware Remote Controls</span>
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-words">
                     Real-time smart lighting, PWM speed regulator, PIR motion hold, and hardware timers
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 text-xs shrink-0">
                   <span className="text-slate-500">Target Node:</span>
                   <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-xl border border-cyan-500/30">
                     {deviceId}
@@ -351,7 +352,7 @@ export default function SmartHomePage() {
               </div>
 
               {/* Grid of Control Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full min-w-0">
                 {/* 1. Light Control Card */}
                 <LightControlCard
                   state={state}
@@ -372,7 +373,7 @@ export default function SmartHomePage() {
               </div>
 
               {/* 3. Motor Control Card (Extensible GPIO) */}
-              <div className="max-w-xl">
+              <div className="max-w-xl w-full min-w-0">
                 <MotorControlCard
                   state={state}
                   hasPendingCommand={pendingCommands.some((c) => c.device === 'motor')}
@@ -384,18 +385,19 @@ export default function SmartHomePage() {
 
           {/* TAB 2: USAGE ANALYTICS */}
           {currentTab === 'usage' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                <div>
+            <div className="w-full min-w-0 max-w-full space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800 min-w-0">
+                <div className="min-w-0">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span className="text-cyan-400">📊</span> Power Consumption & Usage
+                    <span className="text-cyan-400 shrink-0">📊</span>
+                    <span className="truncate">Power Consumption & Usage</span>
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-words">
                     Operating runtimes, daily kWh metrics, and electricity cost breakdown in IST
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setCurrentTab('history')}
                     className="px-3 py-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-xs font-semibold text-cyan-700 dark:text-cyan-300 transition-colors cursor-pointer"
@@ -430,20 +432,21 @@ export default function SmartHomePage() {
 
           {/* TAB 3: EVENT HISTORY STREAM */}
           {currentTab === 'history' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
-                <div>
+            <div className="w-full min-w-0 max-w-full space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800 min-w-0">
+                <div className="min-w-0">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span className="text-purple-500">📜</span> Hardware Telemetry History
+                    <span className="text-purple-500 shrink-0">📜</span>
+                    <span className="truncate">Hardware Telemetry History</span>
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-words">
                     Live stream of physical device events logged to Supabase PostgreSQL
                   </p>
                 </div>
 
                 <button
                   onClick={() => setCurrentTab('usage')}
-                  className="self-start sm:self-auto px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                  className="self-start sm:self-auto shrink-0 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
                 >
                   ← Back to Analytics
                 </button>
