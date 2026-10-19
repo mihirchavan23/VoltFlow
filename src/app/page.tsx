@@ -19,7 +19,6 @@ import { ToastContainer } from '@/components/ui/Toast';
 // Controls components
 import { LightControlCard } from '@/components/controls/LightControlCard';
 import { FanControlCard } from '@/components/controls/FanControlCard';
-import { MotorControlCard } from '@/components/controls/MotorControlCard';
 
 // Usage components
 import { UsageSummaryCards } from '@/components/usage/UsageSummaryCards';
@@ -291,24 +290,24 @@ export default function SmartHomePage() {
         <main className="flex-1 w-full min-w-0 max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 pb-12 overflow-x-hidden">
           {/* Demo Mode Notice Banner if using mock */}
           {isUsingMock && (
-            <div className="mb-6 p-4 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm min-w-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-500 shrink-0">
-                  <Sparkles className="w-5 h-5" />
+            <div className="mb-3 sm:mb-6 p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 shadow-sm min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-1.5 sm:p-2 rounded-xl bg-amber-500/20 text-amber-500 shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 truncate">
+                  <h4 className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200 truncate">
                     Running in Local Demo / Offline Mode
                   </h4>
-                  <p className="text-xs text-amber-700/80 dark:text-amber-300/70 mt-0.5 break-words">
-                    Connect your Supabase database anytime to switch to real-time cloud and ESP32 operations.
+                  <p className="text-[10px] sm:text-xs text-amber-700/80 dark:text-amber-300/70 mt-0.5 break-words">
+                    Connect your Supabase database anytime for live ESP32 sync.
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={() => setIsCredentialsOpen(true)}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer whitespace-nowrap shrink-0"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] sm:text-xs font-bold transition-all shadow-md cursor-pointer whitespace-nowrap shrink-0 self-end sm:self-auto"
               >
                 Configure Supabase
               </button>
@@ -317,42 +316,42 @@ export default function SmartHomePage() {
 
           {/* Pending Command Tracker Strip */}
           {pendingCommands.length > 0 && (
-            <div className="mb-6 p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-pulse min-w-0">
+            <div className="mb-3 sm:mb-6 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-pulse min-w-0">
               <div className="flex items-center gap-2 min-w-0 truncate">
                 <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                <span className="truncate">
+                <span className="truncate text-[11px] sm:text-xs">
                   <strong>{pendingCommands.length} command(s) pending:</strong>{' '}
                   {pendingCommands.map((c) => `${c.device} (${c.action})`).join(', ')}
                 </span>
               </div>
-              <span className="text-[11px] opacity-80 shrink-0 ml-2">Awaiting ESP32 hardware acknowledgement</span>
+              <span className="text-[10px] sm:text-[11px] opacity-80 shrink-0 ml-2 hidden xs:inline">Awaiting ESP32 ack</span>
             </div>
           )}
 
           {/* TAB 1: CONTROLS */}
           {currentTab === 'controls' && (
-            <div className="w-full min-w-0 max-w-full space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800 min-w-0">
+            <div className="w-full min-w-0 max-w-full space-y-3 sm:space-y-6">
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800 min-w-0">
                 <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <h2 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <span className="text-blue-500 shrink-0">⚡</span>
                     <span className="truncate">Hardware Remote Controls</span>
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-words">
+                  <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 mt-0.5 break-words">
                     Real-time smart lighting, PWM speed regulator, PIR motion hold, and hardware timers
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs shrink-0">
-                  <span className="text-slate-500">Target Node:</span>
-                  <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-xl border border-cyan-500/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs shrink-0">
+                  <span className="text-slate-500 hidden sm:inline">Target Node:</span>
+                  <span className="font-mono font-bold text-cyan-500 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl border border-cyan-500/30">
                     {deviceId}
                   </span>
                 </div>
               </div>
 
-              {/* Grid of Control Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full min-w-0">
+              {/* Grid of Control Cards (Smart Light & Ceiling Fan) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 w-full min-w-0">
                 {/* 1. Light Control Card */}
                 <LightControlCard
                   state={state}
@@ -369,15 +368,6 @@ export default function SmartHomePage() {
                   onCommand={handleSendCommand}
                   isOnline={isOnline}
                   fanCountdown={fanCountdown}
-                />
-              </div>
-
-              {/* 3. Motor Control Card (Extensible GPIO) */}
-              <div className="max-w-xl w-full min-w-0">
-                <MotorControlCard
-                  state={state}
-                  hasPendingCommand={pendingCommands.some((c) => c.device === 'motor')}
-                  onCommand={handleSendCommand}
                 />
               </div>
             </div>

@@ -113,7 +113,7 @@ export function FanControlCard({
   const strokeDashoffset = circumference - (speedPercent / 100) * circumference * 0.75;
 
   return (
-    <div className="relative group overflow-hidden rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 p-6">
+    <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 p-3.5 sm:p-6 w-full min-w-0">
       {/* Dynamic ambient background glow */}
       <div
         className={`absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl transition-opacity duration-700 pointer-events-none ${
@@ -122,51 +122,51 @@ export function FanControlCard({
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between pb-2.5 sm:pb-4 border-b border-slate-100 dark:border-slate-800/80 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
-            className={`relative p-3 rounded-2xl transition-all duration-300 ${
+            className={`relative p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all duration-300 shrink-0 ${
               isFanOn
                 ? 'bg-gradient-to-tr from-cyan-600 to-blue-500 text-white shadow-lg shadow-cyan-500/30'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
             }`}
           >
-            <Fan style={getSpinStyle()} className="w-6 h-6" />
+            <Fan style={getSpinStyle()} className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ceiling Fan</h3>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white truncate">Ceiling Fan</h3>
               {hasPendingCommand && (
                 <Badge variant="warning" size="sm" pulse>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Syncing
+                  <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                  <span className="text-[10px] sm:text-xs">Syncing</span>
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 sm:gap-1.5 mt-0.5 truncate">
               <TimeAgo date={state.updated_at} prefix="Updated " />
               <span>•</span>
-              <span className="font-medium text-slate-600 dark:text-slate-300">
-                GPIO 5 (LEDC PWM)
+              <span className="font-medium text-slate-600 dark:text-slate-300 truncate">
+                GPIO 5 (PWM)
               </span>
             </p>
           </div>
         </div>
 
         {/* State Badges */}
-        <div className="flex items-center gap-2">
-          <Badge variant={isFanOn ? 'info' : 'neutral'} size="md">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <Badge variant={isFanOn ? 'info' : 'neutral'} size="sm">
             {isFanOn ? `PWM ${currentPwm}` : 'OFF'}
           </Badge>
-          <Badge variant={isFanOn ? 'success' : 'neutral'} size="md">
+          <Badge variant={isFanOn ? 'success' : 'neutral'} size="sm">
             {speedPercent}%
           </Badge>
         </div>
       </div>
 
       {/* Circular Dial / Speed Regulator Visualizer */}
-      <div className="my-5 flex flex-col items-center justify-center">
-        <div className="relative flex items-center justify-center w-48 h-48">
+      <div className="my-2 sm:my-5 flex flex-col items-center justify-center">
+        <div className="relative flex items-center justify-center w-28 h-28 sm:w-44 sm:h-44">
           <svg className="w-full h-full transform -rotate-135" viewBox="0 0 160 160">
             {/* Background track */}
             <circle
@@ -207,43 +207,43 @@ export function FanControlCard({
             onClick={handleTogglePower}
             disabled={hasPendingCommand || actionLoading !== null}
             title={isFanOn ? 'Click to turn OFF' : 'Click to turn ON'}
-            className="absolute flex flex-col items-center justify-center w-28 h-28 rounded-full bg-slate-50 dark:bg-slate-800/90 shadow-inner hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-slate-200 dark:border-slate-700 disabled:opacity-75"
+            className="absolute flex flex-col items-center justify-center w-18 h-18 sm:w-26 sm:h-26 rounded-full bg-slate-50 dark:bg-slate-800/90 shadow-inner hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-slate-200 dark:border-slate-700 disabled:opacity-75"
           >
             <Fan
               style={getSpinStyle()}
-              className={`w-7 h-7 mb-1 transition-colors ${
+              className={`w-5 h-5 sm:w-7 sm:h-7 mb-0.5 sm:mb-1 transition-colors ${
                 isFanOn ? 'text-cyan-500 dark:text-cyan-400' : 'text-slate-400'
               }`}
             />
-            <span className="text-xl font-extrabold text-slate-800 dark:text-white font-mono leading-none">
+            <span className="text-sm sm:text-xl font-extrabold text-slate-800 dark:text-white font-mono leading-none">
               {speedPercent}%
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mt-1">
-              {isFanOn ? `PWM ${currentPwm}` : 'TAP TO START'}
+            <span className="text-[8px] sm:text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mt-0.5 sm:mt-1">
+              {isFanOn ? `PWM ${currentPwm}` : 'TAP ON'}
             </span>
           </button>
         </div>
 
         {/* Speed Label */}
-        <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">
+        <div className="text-[10px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1 truncate">
           {currentStep === 0
             ? 'Fan is currently stopped'
             : currentStep === 80
-            ? 'Operating at Speed 1 (Low airflow)'
+            ? 'Speed 1 (Low airflow)'
             : currentStep === 150
-            ? 'Operating at Speed 2 (Medium airflow)'
-            : 'Operating at Speed 3 (Maximum cooling)'}
+            ? 'Speed 2 (Medium airflow)'
+            : 'Speed 3 (Maximum cooling)'}
         </div>
       </div>
 
       {/* Speed Step Buttons: OFF, 1 (80), 2 (150), 3 (255) */}
-      <div className="space-y-2 mb-5">
-        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+      <div className="space-y-1.5 sm:space-y-2 mb-2.5 sm:mb-5">
+        <div className="flex items-center justify-between text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
           <span>Speed Selector</span>
-          <span className="text-[11px] font-normal lowercase">hardware mapped steps</span>
+          <span className="text-[10px] sm:text-[11px] font-normal lowercase">hardware mapped steps</span>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
           {SPEED_CONFIGS.map((cfg) => {
             const isSelected = currentStep === cfg.step;
             const isBtnLoading = actionLoading === `speed_${cfg.step}`;
@@ -254,7 +254,7 @@ export function FanControlCard({
                 type="button"
                 disabled={hasPendingCommand || isBtnLoading}
                 onClick={() => handleSetSpeed(cfg.step)}
-                className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
+                className={`flex flex-col items-center justify-center py-1.5 sm:py-2.5 px-1 sm:px-2 rounded-xl sm:rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
                   isSelected
                     ? cfg.step === 0
                       ? 'bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 shadow-md font-bold'
@@ -263,11 +263,11 @@ export function FanControlCard({
                 }`}
               >
                 {isBtnLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin my-1" />
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin my-0.5 sm:my-1" />
                 ) : (
                   <>
-                    <span className="text-base font-extrabold">{cfg.label}</span>
-                    <span className="text-[10px] opacity-80 whitespace-nowrap">
+                    <span className="text-sm sm:text-base font-extrabold">{cfg.label}</span>
+                    <span className="text-[9px] sm:text-[10px] opacity-80 whitespace-nowrap">
                       {cfg.step === 0 ? 'OFF' : `PWM ${cfg.step}`}
                     </span>
                   </>
@@ -280,19 +280,19 @@ export function FanControlCard({
 
       {/* Active Timer Feedback & Countdown Banner */}
       {fanCountdown > 0 ? (
-        <div className="mb-4 p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between animate-pulse">
-          <div className="flex items-center gap-2.5 text-xs text-cyan-800 dark:text-cyan-200">
-            <Clock className="w-4 h-4 text-cyan-500 shrink-0" />
-            <div>
-              <span>Fan turns <strong>{state.fan_timer_action || (isFanOn ? 'OFF' : 'ON')}</strong> in:</span>
-              <div className="text-base font-bold text-cyan-600 dark:text-cyan-400 font-mono mt-0.5">
-                {fanCountdown} seconds remaining
+        <div className="mb-2.5 sm:mb-4 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-2 text-xs text-cyan-800 dark:text-cyan-200 min-w-0">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500 shrink-0" />
+            <div className="min-w-0">
+              <span className="text-[11px] sm:text-xs">Fan turns <strong>{state.fan_timer_action || (isFanOn ? 'OFF' : 'ON')}</strong> in:</span>
+              <div className="text-sm sm:text-base font-bold text-cyan-600 dark:text-cyan-400 font-mono mt-0.5">
+                {fanCountdown}s remaining
               </div>
             </div>
           </div>
           <button
             onClick={() => setIsTimerOpen(true)}
-            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-800 dark:text-cyan-200 transition-colors"
+            className="text-[11px] sm:text-xs font-semibold px-2 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-800 dark:text-cyan-200 transition-colors shrink-0"
           >
             Reset
           </button>
@@ -300,13 +300,13 @@ export function FanControlCard({
       ) : null}
 
       {/* Quick Timer Presets Footer */}
-      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Quick Timers:</span>
+      <div className="pt-2.5 sm:pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between min-w-0">
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 shrink-0">
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          <span>Timers:</span>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {[
             { label: '30s', secs: 30 },
             { label: '1m', secs: 60 },
@@ -324,7 +324,7 @@ export function FanControlCard({
                   targetPwm: 150,
                 })
               }
-              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              className="px-2 py-1 sm:px-2.5 sm:py-1 text-[11px] sm:text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
             >
               {quick.label}
             </button>
@@ -333,7 +333,7 @@ export function FanControlCard({
           <button
             type="button"
             onClick={() => setIsTimerOpen(true)}
-            className="px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-700 dark:text-cyan-400 transition-colors cursor-pointer"
+            className="px-2.5 py-1 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-700 dark:text-cyan-400 transition-colors cursor-pointer"
           >
             Custom...
           </button>
