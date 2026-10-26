@@ -201,6 +201,14 @@ void loop() {
   if (ecoMode) {
     int rawMotion = digitalRead(PIR_PIN);
 
+    // Diagnostic Serial log on raw pin change (helps identify potentiometer / wiring issues)
+    static int lastRawState = -1;
+    if (rawMotion != lastRawState) {
+      lastRawState = rawMotion;
+      Serial.printf("[PIR PIN 13] Physical Signal changed -> %s\n",
+                    rawMotion == HIGH ? "HIGH (Motion Detected)" : "LOW (Idle / No Motion)");
+    }
+
     // 1. Noise Debounce Filter: Require steady HIGH for at least PIR_DEBOUNCE_MS (150ms)
     if (rawMotion == HIGH) {
       if (pirHighStartTime == 0) {
