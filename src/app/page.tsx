@@ -26,8 +26,9 @@ import { UsageDurationChart } from '@/components/usage/UsageDurationChart';
 import { EnergyCostChart } from '@/components/usage/EnergyCostChart';
 import { DeviceEventHistory } from '@/components/usage/DeviceEventHistory';
 import { EnergySettingsModal } from '@/components/usage/EnergySettingsModal';
+import { VoiceControlModal } from '@/components/voice/VoiceControlModal';
 
-import { Sliders, BarChart3, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Sliders, BarChart3, ShieldCheck, Sparkles, AlertCircle, Mic } from 'lucide-react';
 
 export default function SmartHomePage() {
   const { theme, toggleTheme, isDark, mounted } = useTheme();
@@ -46,6 +47,7 @@ export default function SmartHomePage() {
   const [currentTab, setCurrentTab] = useState<TabType>('controls');
   const [isEnergySettingsOpen, setIsEnergySettingsOpen] = useState(false);
   const [isCredentialsOpen, setIsCredentialsOpen] = useState(false);
+  const [isVoiceControlOpen, setIsVoiceControlOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
 
   // Toasts
@@ -180,6 +182,19 @@ export default function SmartHomePage() {
     }
   };
 
+  const handleCancelTimer = async (device: 'light' | 'fan') => {
+    addToast('pending', 'Canceling Timer', `Clearing scheduled timer for ${device.toUpperCase()}...`);
+    const result = await handleSendCommand({
+      device,
+      action: 'set_timer',
+      duration_seconds: 0,
+      timer_action: 'off',
+    });
+    if (result.success) {
+      addToast('success', 'Timer Cleared', `${device === 'light' ? 'Light' : 'Fan'} timer was deleted.`);
+    }
+  };
+
   // Save Supabase credentials from modal
   const handleSaveCredentials = (newUrl: string, newKey: string, newDevId: string) => {
     if (typeof window !== 'undefined') {
@@ -252,9 +267,13 @@ export default function SmartHomePage() {
     refreshEvents();
     addToast('info', 'Synchronizing', 'Fetched latest state and history from Supabase.');
   };
-
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 transition-colors duration-200 cyber-grid relative">
+      {/* Futuristic Ambient Glow Background Orbs */}
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed bottom-1/4 right-10 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed top-2/3 left-10 w-80 h-80 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Top Header with Integrated Top-Nav Tab Switcher */}
       <Header
         deviceId={deviceId}
@@ -270,6 +289,7 @@ export default function SmartHomePage() {
         currentTab={currentTab}
         onTabChange={setCurrentTab}
         onOpenEnergySettings={() => setIsEnergySettingsOpen(true)}
+        onOpenVoiceControl={() => setIsVoiceControlOpen(true)}
       />
 
       {/* Main Container */}
@@ -472,6 +492,28 @@ export default function SmartHomePage() {
         onSeedData={handleSeedData}
         isSeeding={isSeeding}
       />
+
+      {/* Futuristic Voice Control Assistant Modal */}
+      <VoiceControlModal
+        isOpen={isVoiceControlOpen}
+        onClose={() => setIsVoiceControlOpen(false)}
+        onExecuteCommand={handleSendCommand}
+        onCancelTimer={handleCancelTimer}
+        lightOn={state.light_on}
+        fanSpeed={state.fan_speed}
+      />
+
+      {/* Floating Futuristic Cyber Voice Assistant Trigger Button */}
+      <button
+        onClick={() => setIsVoiceControlOpen(true)}
+        title="Open Voice Assistant (LED & Fan Control)"
+        aria-label="Open Voice Assistant"
+        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 group p-3.5 sm:p-4 rounded-full bg-gradient-to-tr from-cyan-600 via-indigo-600 to-blue-500 text-white shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:shadow-[0_0_35px_rgba(6,182,212,0.9)] hover:scale-105 active:scale-95 transition-all duration-300 border border-cyan-300/50 flex items-center justify-center cursor-pointer"
+      >
+        <Mic className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] group-hover:scale-110 transition-transform" />
+        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#040711] animate-ping" />
+        <span className="sr-only">Voice Assistant</span>
+      </button>
 
       {/* Toast Notification Container */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />

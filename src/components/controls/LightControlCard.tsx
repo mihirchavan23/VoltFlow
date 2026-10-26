@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lightbulb, Leaf, Zap, Clock, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Lightbulb, Leaf, Zap, Clock, Loader2, Sparkles, AlertCircle, Edit3, Trash2 } from 'lucide-react';
 import { DeviceState } from '@/types/database.types';
 import { Badge } from '@/components/ui/Badge';
 import { TimerModal } from './TimerModal';
@@ -74,8 +74,25 @@ export function LightControlCard({
     setActionLoading(null);
   };
 
+  const handleDeleteTimer = async () => {
+    setActionLoading('delete_timer');
+    await onCommand({
+      device: 'light',
+      action: 'set_timer',
+      duration_seconds: 0,
+      timer_action: 'off',
+    });
+    setActionLoading(null);
+  };
+
+  const formatMinSec = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
   return (
-    <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 p-3.5 sm:p-6 w-full min-w-0">
+    <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-[#080d19]/90 border border-slate-200/80 dark:border-amber-500/20 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 p-3.5 sm:p-6 w-full min-w-0">
       {/* Dynamic ambient background glow when illuminated */}
       <div
         className={`absolute -top-24 -left-24 w-64 h-64 rounded-full blur-3xl transition-opacity duration-700 pointer-events-none ${
@@ -236,24 +253,50 @@ export function LightControlCard({
         )}
       </div>
 
-      {/* Active Timer Feedback & Countdown Banner */}
+      {/* Active Timer Feedback & Countdown Banner (with Edit & Delete) */}
       {lightCountdown > 0 ? (
-        <div className="mb-2.5 sm:mb-4 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between animate-pulse">
-          <div className="flex items-center gap-2 text-xs text-amber-800 dark:text-amber-200 min-w-0">
-            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+        <div className="mb-2.5 sm:mb-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-500 shrink-0 animate-pulse">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
             <div className="min-w-0">
-              <span className="text-[11px] sm:text-xs">Light turns <strong>{state.light_timer_action || (isLightOn ? 'OFF' : 'ON')}</strong> in:</span>
-              <div className="text-sm sm:text-base font-bold text-amber-600 dark:text-amber-400 font-mono mt-0.5">
-                {lightCountdown}s remaining
+              <div className="text-[11px] sm:text-xs text-amber-800 dark:text-amber-200 font-medium">
+                Scheduled: Turn <strong className="font-extrabold text-amber-900 dark:text-amber-100 uppercase">{state.light_timer_action || (isLightOn ? 'OFF' : 'ON')}</strong>
+              </div>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <span className="text-base sm:text-xl font-extrabold text-amber-600 dark:text-amber-400 font-mono tracking-tight">
+                  {formatMinSec(lightCountdown)}
+                </span>
+                <span className="text-[10px] sm:text-xs text-amber-700/80 dark:text-amber-300/80 font-mono">
+                  ({lightCountdown}s left)
+                </span>
               </div>
             </div>
           </div>
-          <button
-            onClick={() => setIsTimerOpen(true)}
-            className="text-[11px] sm:text-xs font-semibold px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-200 transition-colors shrink-0"
-          >
-            Reset
-          </button>
+
+          {/* Edit & Delete Actions */}
+          <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsTimerOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-200 text-xs font-semibold transition-colors cursor-pointer"
+              title="Edit timer duration or action"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit</span>
+            </button>
+            <button
+              type="button"
+              disabled={actionLoading === 'delete_timer'}
+              onClick={handleDeleteTimer}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 text-xs font-semibold transition-colors cursor-pointer border border-rose-500/30"
+              title="Cancel and delete active timer"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+              <span>{actionLoading === 'delete_timer' ? 'Canceling...' : 'Delete'}</span>
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -261,7 +304,7 @@ export function LightControlCard({
       <div className="pt-2.5 sm:pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between min-w-0">
         <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 shrink-0">
           <Clock className="w-3.5 h-3.5 shrink-0" />
-          <span>Timers:</span>
+          <span>Quick Timers:</span>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-1.5">
@@ -292,7 +335,7 @@ export function LightControlCard({
             onClick={() => setIsTimerOpen(true)}
             className="px-2.5 py-1 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-semibold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 transition-colors cursor-pointer"
           >
-            Custom...
+            {lightCountdown > 0 ? 'Edit...' : 'Custom...'}
           </button>
         </div>
       </div>
@@ -303,7 +346,11 @@ export function LightControlCard({
         onClose={() => setIsTimerOpen(false)}
         device="light"
         onSetTimer={handleSetTimer}
-        isSubmitting={actionLoading === 'timer'}
+        onDeleteTimer={lightCountdown > 0 ? handleDeleteTimer : undefined}
+        initialDuration={lightCountdown > 0 ? lightCountdown : 60}
+        initialAction={state.light_timer_action?.toLowerCase() === 'on' ? 'on' : 'off'}
+        isEditing={lightCountdown > 0}
+        isSubmitting={actionLoading === 'timer' || actionLoading === 'delete_timer'}
       />
     </div>
   );

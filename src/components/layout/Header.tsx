@@ -13,6 +13,7 @@ import {
   History,
   Settings,
   Zap,
+  Mic,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { TabType } from '@/types/smartHome.types';
@@ -31,6 +32,7 @@ interface HeaderProps {
   currentTab: TabType;
   onTabChange: (tab: TabType) => void;
   onOpenEnergySettings?: () => void;
+  onOpenVoiceControl?: () => void;
 }
 
 export function Header({
@@ -47,6 +49,7 @@ export function Header({
   currentTab,
   onTabChange,
   onOpenEnergySettings,
+  onOpenVoiceControl,
 }: HeaderProps) {
   const tabs = [
     {
@@ -126,6 +129,19 @@ export function Header({
               <Database className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{isUsingMock ? 'Demo Mode' : 'Supabase'}</span>
             </button>
+
+            {/* Futuristic Voice Assistant Button */}
+            {onOpenVoiceControl && (
+              <button
+                onClick={onOpenVoiceControl}
+                title="Voice Assistant: speak to control smart LED & ceiling fan"
+                className="relative flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl border border-cyan-500/40 hover:border-cyan-400 bg-gradient-to-r from-cyan-500/15 via-blue-500/15 to-indigo-500/15 hover:from-cyan-500/25 hover:via-blue-500/25 hover:to-indigo-500/25 text-cyan-700 dark:text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)] hover:shadow-[0_0_18px_rgba(6,182,212,0.4)] text-[11px] font-bold tracking-wide transition-all cursor-pointer"
+              >
+                <Mic className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400 animate-pulse" />
+                <span className="hidden xs:inline">Voice AI</span>
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+              </button>
+            )}
 
             {/* Tariffs settings button */}
             {onOpenEnergySettings && (

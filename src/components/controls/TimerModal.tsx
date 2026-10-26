@@ -1,7 +1,5 @@
-'use client';
-
-import React, { useState } from 'react';
-import { X, Clock, Play, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Clock, Play, Sparkles, Trash2, Edit3 } from 'lucide-react';
 import { SpeedStep } from '@/types/smartHome.types';
 
 interface TimerModalProps {
@@ -14,6 +12,11 @@ interface TimerModalProps {
     timerAction: 'on' | 'off';
     targetPwm?: number;
   }) => Promise<void>;
+  onDeleteTimer?: () => Promise<void>;
+  initialDuration?: number;
+  initialAction?: 'on' | 'off';
+  initialTargetPwm?: number;
+  isEditing?: boolean;
   isSubmitting?: boolean;
 }
 
@@ -31,13 +34,30 @@ export function TimerModal({
   onClose,
   device,
   onSetTimer,
+  onDeleteTimer,
+  initialDuration = 60,
+  initialAction = 'off',
+  initialTargetPwm = 150,
+  isEditing = false,
   isSubmitting = false,
 }: TimerModalProps) {
-  const [selectedDuration, setSelectedDuration] = useState<number>(60); // 1m default
-  const [isCustom, setIsCustom] = useState<boolean>(false);
-  const [customSeconds, setCustomSeconds] = useState<string>('45');
-  const [timerAction, setTimerAction] = useState<'on' | 'off'>('off');
-  const [targetFanSpeed, setTargetFanSpeed] = useState<SpeedStep>(150); // Speed 2 default
+  const [selectedDuration, setSelectedDuration] = useState<number>(initialDuration);
+  const [isCustom, setIsCustom] = useState<boolean>(!PRESET_DURATIONS.some(p => p.seconds === initialDuration));
+  const [customSeconds, setCustomSeconds] = useState<string>(String(initialDuration));
+  const [timerAction, setTimerAction] = useState<'on' | 'off'>(initialAction);
+  const [targetFanSpeed, setTargetFanSpeed] = useState<SpeedStep>((initialTargetPwm as SpeedStep) || 150);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedDuration(initialDuration);
+      setTimerAction(initialAction);
+      setTargetFanSpeed((initialTargetPwm as SpeedStep) || 150);
+      const isPreset = PRESET_DURATIONS.some(p => p.seconds === initialDuration);
+      setIsCustom(!isPreset);
+      setCustomSeconds(String(initialDuration));
+    }
+  }, [isOpen, initialDuration, initialAction, initialTargetPwm]);
 
   if (!isOpen) return null;
 
@@ -53,6 +73,14 @@ export function TimerModal({
       timerAction,
       targetPwm: device === 'fan' && timerAction === 'on' ? targetFanSpeed : 0,
     });
+    onClose();
+  };
+
+  const handleDelete = async () => {
+    if (!onDeleteTimer) return;
+    setIsDeleting(true);
+    await onDeleteTimer();
+    setIsDeleting(false);
     onClose();
   };
 
@@ -79,17 +107,18 @@ export function TimerModal({
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">
-                Set {device === 'light' ? 'Lighting' : 'Fan'} Timer
+              <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                {isEditing ? <Edit3 className="w-4 h-4 text-cyan-400" /> : null}
+                <span>{isEditing ? 'Edit' : 'Set'} {device === 'light' ? 'Lighting' : 'Fan'} Timer</span>
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Hardware countdown executed on ESP32
+                {isEditing ? 'Modify or cancel active countdown on ESP32' : 'Hardware countdown executed on ESP32'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -233,24 +262,38 @@ export function TimerModal({
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || effectiveSeconds <= 0}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 disabled:opacity-50 transition-all cursor-pointer"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              {isSubmitting ? 'Queueing...' : 'Arm Timer'}
-            </button>
+          {/* Action Buttons: Delete / Cancel / Save */}
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
+            {onDeleteTimer && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isSubmitting || isDeleting}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 text-rose-500" />
+                <span>{isDeleting ? 'Deleting...' : 'Delete Timer'}</span>
+              </button>
+            )}
+
+            <div className="flex-1 w-full flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting || isDeleting}
+                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium transition-colors cursor-pointer text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || isDeleting || effectiveSeconds <= 0}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 transition-all cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>{isSubmitting ? 'Queueing...' : isEditing ? 'Update Timer' : 'Arm Timer'}</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

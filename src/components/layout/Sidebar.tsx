@@ -47,19 +47,19 @@ export function Sidebar({
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 p-5 min-h-[calc(100vh-4rem)] justify-between transition-colors">
+    <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white/80 dark:bg-[#070b14]/90 backdrop-blur-xl border-r border-slate-200/80 dark:border-cyan-500/20 p-5 min-h-[calc(100vh-4rem)] justify-between transition-colors shadow-sm dark:shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
       <div className="space-y-6">
         {/* Brand Banner */}
         <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-[0_0_18px_rgba(6,182,212,0.45)]">
             <Flame className="w-5 h-5 fill-white" />
           </div>
           <div>
-            <h1 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight tracking-tight">
+            <h1 className="font-extrabold text-base bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 dark:from-cyan-400 dark:via-blue-300 dark:to-indigo-200 leading-tight tracking-tight">
               VoltFlow
             </h1>
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wider uppercase">
-              Smart Home IOE
+            <p className="text-[10px] font-mono font-bold text-cyan-600 dark:text-cyan-400/80 tracking-widest uppercase">
+              CYBER IOE v2.4
             </p>
           </div>
         </div>
@@ -76,14 +76,14 @@ export function Sidebar({
                 onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25 font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] border border-cyan-300/40 font-bold scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 <div className="flex-1">
                   <div className="text-sm leading-none">{item.label}</div>
-                  <div className={`text-[10px] mt-1 ${isActive ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  <div className={`text-[10px] mt-1 ${isActive ? 'text-cyan-100' : 'text-slate-500 dark:text-slate-400'}`}>
                     {item.description}
                   </div>
                 </div>
