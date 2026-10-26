@@ -54,16 +54,8 @@ bool ecoMode = true;
 int fanSpeed = 0; // 0 (OFF), 80 (Speed 1), 150 (Speed 2), 255 (Speed 3)
 bool motorOn = false;
 
-// Motion (PIR) State & Noise Filtering
+// Motion (PIR) State
 unsigned long motionStartTime = 0;
-const unsigned long PIR_HOLD_TIME_MS = 5000;    // 5 seconds light hold after motion stops
-const unsigned long PIR_WARMUP_MS = 20000;      // 20 seconds warmup calibration period after boot
-const unsigned long PIR_COOLDOWN_MS = 2500;     // 2.5 seconds lockout after light turns OFF to ignore Wi-Fi/relay transients
-const unsigned long PIR_DEBOUNCE_MS = 100;      // Require 100ms of sustained HIGH to prevent false triggers
-unsigned long lastMotionOffTime = 0;
-unsigned long pirHighStartTime = 0;
-bool pirMotionConfirmed = false;
-bool pirNeedsReset = false;                     // Latch: requires sensor to return to LOW before allowing next trigger
 
 // Light Timer State
 bool lightTimerActive = false;
@@ -164,7 +156,7 @@ void setup() {
 
   // Pin modes
   pinMode(LED_PIN, OUTPUT);
-  pinMode(PIR_PIN, INPUT_PULLDOWN); // Internal pull-down to eliminate floating pin EMI noise
+  pinMode(PIR_PIN, INPUT);
   pinMode(MOTOR_PIN, OUTPUT);
 
   digitalWrite(LED_PIN, LOW);
@@ -197,69 +189,26 @@ void loop() {
   unsigned long currentMillis = millis();
 
   // --------------------------------------------------------------------------
-  // A. ECO MODE PIR MOTION LOGIC (With Debounce, Warmup Guard & Cooldown)
+  // A. ECO MODE PIR MOTION LOGIC (Exact Reference Logic)
   // --------------------------------------------------------------------------
   if (ecoMode) {
-    int rawMotion = digitalRead(PIR_PIN);
+    int motion = digitalRead(PIR_PIN);
 
-    // Diagnostic Serial log on raw pin change (helps identify potentiometer / wiring issues)
-    static int lastRawState = -1;
-    if (rawMotion != lastRawState) {
-      lastRawState = rawMotion;
-      Serial.printf("[PIR PIN 13] Physical Signal changed -> %s\n",
-                    rawMotion == HIGH ? "HIGH (Motion Detected)" : "LOW (Idle / No Motion)");
+    // 1. Motion detected when light was OFF -> Turn ON & record start time
+    if (motion == HIGH && !ledOn) {
+      digitalWrite(LED_PIN, HIGH);
+      ledOn = true;
+      motionStartTime = millis();
+      Serial.println("[PIR] Motion detected -> Light turned ON");
+      logDeviceEvent("light", "motion_on", 1, "PIR");
+      sendHeartbeatAndState();
     }
 
-    // 1. Noise Debounce Filter: Require steady HIGH for at least PIR_DEBOUNCE_MS (100ms)
-    if (rawMotion == HIGH) {
-      if (pirHighStartTime == 0) {
-        pirHighStartTime = currentMillis;
-      } else if (currentMillis - pirHighStartTime >= PIR_DEBOUNCE_MS) {
-        pirMotionConfirmed = true;
-      }
-    } else {
-      pirHighStartTime = 0;
-      pirMotionConfirmed = false;
-      // When raw motion physically drops back to LOW, release the latch so next motion can trigger
-      pirNeedsReset = false;
-    }
-
-    // 2. Warmup & Cooldown Checks
-    bool isWarmedUp = (currentMillis >= PIR_WARMUP_MS);
-    bool isCooldownOver = (currentMillis - lastMotionOffTime >= PIR_COOLDOWN_MS);
-
-    // Warmup status log every 5s during initial boot
-    static unsigned long lastWarmupLog = 0;
-    if (!isWarmedUp && (currentMillis - lastWarmupLog >= 5000)) {
-      lastWarmupLog = currentMillis;
-      Serial.printf("[PIR WARMUP] Sensor stabilizing... %lu sec remaining (LED will remain OFF)\n",
-                    (PIR_WARMUP_MS - currentMillis) / 1000);
-    }
-
-    // 3. Motion detected: Turn ON if light was OFF, sensor is warmed up, cooled down, and reset
-    if (pirMotionConfirmed && isWarmedUp && isCooldownOver && !pirNeedsReset) {
-      if (!ledOn) {
-        digitalWrite(LED_PIN, HIGH);
-        ledOn = true;
-        motionStartTime = currentMillis;
-        Serial.println("[PIR] Motion detected -> Light turned ON (5s auto-off timer running)");
-        logDeviceEvent("light", "motion_on", 1, "PIR");
-        sendHeartbeatAndState();
-      }
-    }
-
-    // While LED is ON, if motion continues, keep renewing the 5s hold timer
-    if (ledOn && pirMotionConfirmed) {
-      motionStartTime = currentMillis;
-    }
-
-    // 4. Auto-turn OFF light after 5 seconds of continuous NO motion
-    if (ledOn && (currentMillis - motionStartTime >= PIR_HOLD_TIME_MS)) {
+    // 2. Auto-turn OFF light after 5 seconds
+    if (ledOn && (millis() - motionStartTime >= 5000)) {
       digitalWrite(LED_PIN, LOW);
       ledOn = false;
-      lastMotionOffTime = currentMillis; // Enforce lockout to ignore Wi-Fi/relay transients
-      pirNeedsReset = true;             // MUST see sensor go LOW before triggering again
-      Serial.println("[PIR] 5 seconds elapsed without motion -> Light turned OFF");
+      Serial.println("[PIR] 5 seconds elapsed -> Light turned OFF");
       logDeviceEvent("light", "motion_off", 0, "PIR");
       sendHeartbeatAndState();
     }
@@ -464,16 +413,12 @@ void executeCommand(String cmdId, String device, String action, int value,
     } else if (action == "off") {
       ecoMode = false;
       ledOn = false;
-      lastMotionOffTime = millis();
-      pirNeedsReset = true;
       digitalWrite(LED_PIN, LOW);
       logDeviceEvent("light", "turned_off", 0, "web");
       Serial.println("Light turned OFF via web command");
     } else if (action == "eco") {
       ecoMode = true;
       ledOn = false;
-      lastMotionOffTime = millis();
-      pirNeedsReset = true; // Sensor must be observed LOW before a motion trigger occurs
       digitalWrite(LED_PIN, LOW);
       logDeviceEvent("light", "mode_change", 1, "web");
       Serial.println("ECO Mode enabled - LED set to OFF, waiting for PIR motion");
