@@ -15,6 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
+import { parseEnglishVoiceIntent, ParsedVoiceIntent } from '@/lib/nlp/voiceIntentParser';
 
 interface VoiceControlModalProps {
   isOpen: boolean;
@@ -29,15 +30,6 @@ interface VoiceControlModalProps {
   onCancelTimer?: (device: 'light' | 'fan') => Promise<void>;
   lightOn?: boolean;
   fanSpeed?: number;
-}
-
-interface ParsedVoiceIntent {
-  device: 'light' | 'fan';
-  action: 'on' | 'off' | 'eco' | 'normal' | 'speed' | 'set_timer';
-  value?: number;
-  duration_seconds?: number;
-  timer_action?: 'on' | 'off';
-  humanDescription: string;
 }
 
 export function VoiceControlModal({
@@ -91,161 +83,56 @@ export function VoiceControlModal({
     }
   }, []);
 
-  // Natural Language Intent Parser
-  const parseVoiceCommand = useCallback((rawText: string): ParsedVoiceIntent | null => {
-    const text = rawText.toLowerCase().trim();
+  // English Natural Language Intent Parser
+  const parseVoiceCommand = useCallback(
+    (rawText: string): ParsedVoiceIntent[] | null => {
+      return parseEnglishVoiceIntent(rawText, { lightOn, fanSpeed });
+    },
+    [lightOn, fanSpeed]
+  );
 
-    // 1. LIGHT COMMANDS
-    if (text.includes('eco mode') || text.includes('eco') || text.includes('motion mode')) {
-      return {
-        device: 'light',
-        action: 'eco',
-        value: 1,
-        humanDescription: 'Enable Light ECO Mode (PIR Motion Activated)',
-      };
-    }
+  // Execute recognized commands (single or compound)
+  const executeIntents = useCallback(
+    async (intents: ParsedVoiceIntent[]) => {
+      if (!intents || intents.length === 0) return;
 
-    if (text.includes('normal mode') || text.includes('manual mode')) {
-      return {
-        device: 'light',
-        action: 'normal',
-        value: 0,
-        humanDescription: 'Switch Light to Normal Mode',
-      };
-    }
+      const descriptions = intents.map((i) => i.humanDescription).join(' & ');
+      setStatusMessage(`Executing: ${descriptions}...`);
+      speakFeedback(intents[0].humanDescription);
+      setLastExecuted(descriptions);
 
-    if (
-      text.includes('turn on light') ||
-      text.includes('light on') ||
-      text.includes('switch on light') ||
-      text.includes('turn the light on') ||
-      text.includes('lights on')
-    ) {
-      return {
-        device: 'light',
-        action: 'on',
-        value: 1,
-        humanDescription: 'Turn Smart Light ON',
-      };
-    }
-
-    if (
-      text.includes('turn off light') ||
-      text.includes('light off') ||
-      text.includes('switch off light') ||
-      text.includes('turn the light off') ||
-      text.includes('lights off')
-    ) {
-      return {
-        device: 'light',
-        action: 'off',
-        value: 0,
-        humanDescription: 'Turn Smart Light OFF',
-      };
-    }
-
-    // 2. FAN COMMANDS
-    if (
-      text.includes('fan off') ||
-      text.includes('turn off fan') ||
-      text.includes('stop fan') ||
-      text.includes('turn the fan off') ||
-      text.includes('fan speed 0') ||
-      text.includes('speed 0')
-    ) {
-      return {
-        device: 'fan',
-        action: 'off',
-        value: 0,
-        humanDescription: 'Turn Ceiling Fan OFF',
-      };
-    }
-
-    if (text.includes('speed 1') || text.includes('fan 1') || text.includes('fan low')) {
-      return {
-        device: 'fan',
-        action: 'speed',
-        value: 80,
-        humanDescription: 'Set Fan to Speed 1 (Low, 80 PWM)',
-      };
-    }
-
-    if (text.includes('speed 3') || text.includes('fan 3') || text.includes('fan high') || text.includes('fan max')) {
-      return {
-        device: 'fan',
-        action: 'speed',
-        value: 255,
-        humanDescription: 'Set Fan to Speed 3 (High, 255 PWM)',
-      };
-    }
-
-    if (
-      text.includes('speed 2') ||
-      text.includes('fan 2') ||
-      text.includes('fan medium') ||
-      text.includes('turn on fan') ||
-      text.includes('fan on') ||
-      text.includes('start fan')
-    ) {
-      return {
-        device: 'fan',
-        action: 'speed',
-        value: 150,
-        humanDescription: 'Set Fan to Speed 2 (Medium, 150 PWM)',
-      };
-    }
-
-    // 3. TIMER PARSING: "set light timer 5 minutes", "fan timer 30 seconds"
-    const timerMatch = text.match(/(light|fan)\s+(?:timer\s+)?(?:for\s+)?(\d+)\s*(minute|second|min|sec|m|s)?/i);
-    if (timerMatch) {
-      const dev = timerMatch[1].toLowerCase() as 'light' | 'fan';
-      const num = parseInt(timerMatch[2], 10);
-      const unit = (timerMatch[3] || 's').toLowerCase();
-      let durationSec = num;
-      if (unit.startsWith('m')) {
-        durationSec = num * 60;
+      for (const intent of intents) {
+        await onExecuteCommand({
+          device: intent.device,
+          action: intent.action,
+          value: intent.value,
+          duration_seconds: intent.duration_seconds,
+          timer_action: intent.timer_action,
+        });
       }
 
-      const targetAction = dev === 'light' ? (lightOn ? 'off' : 'on') : ((fanSpeed || 0) > 0 ? 'off' : 'on');
-
-      return {
-        device: dev,
-        action: 'set_timer',
-        duration_seconds: durationSec,
-        timer_action: targetAction,
-        value: dev === 'fan' ? 150 : 1,
-        humanDescription: `Arm ${dev.toUpperCase()} Timer: Auto-${targetAction.toUpperCase()} in ${durationSec}s`,
-      };
-    }
-
-    return null;
-  }, [lightOn, fanSpeed]);
-
-  // Execute recognized command
-  const executeIntent = useCallback(
-    async (intent: ParsedVoiceIntent) => {
-      setStatusMessage(`Executing: ${intent.humanDescription}...`);
-      speakFeedback(intent.humanDescription);
-      setLastExecuted(intent.humanDescription);
-
-      const res = await onExecuteCommand({
-        device: intent.device,
-        action: intent.action,
-        value: intent.value,
-        duration_seconds: intent.duration_seconds,
-        timer_action: intent.timer_action,
-      });
-
-      if (res.success) {
-        setStatusMessage(`Executed: ${intent.humanDescription}`);
-        setTimeout(() => {
-          onClose();
-        }, 1500);
-      } else {
-        setStatusMessage(`Error: ${res.error || 'Command failed'}`);
-      }
+      setStatusMessage(`Executed: ${descriptions}`);
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     },
     [onExecuteCommand, onClose, speakFeedback]
+  );
+
+  // Process any speech transcript through the English NLP engine
+  const handleProcessTranscript = useCallback(
+    (textToProcess: string) => {
+      const clean = textToProcess.trim();
+      if (!clean) return;
+
+      const intents = parseVoiceCommand(clean);
+      if (intents && intents.length > 0) {
+        executeIntents(intents);
+      } else {
+        setStatusMessage(`Could not understand: "${clean}". Try conversational English like "it's too dark", "crank up the fan", or "turn off light in 5 minutes"`);
+      }
+    },
+    [parseVoiceCommand, executeIntents]
   );
 
   // Toggle listening
@@ -275,7 +162,7 @@ export function VoiceControlModal({
       recognition.onstart = () => {
         setIsListening(true);
         setTranscript('');
-        setStatusMessage('Listening... Speak a smart home command');
+        setStatusMessage('Listening... Speak naturally in English');
       };
 
       recognition.onresult = (event: any) => {
@@ -287,12 +174,7 @@ export function VoiceControlModal({
 
         // Check if final result is available
         if (event.results[0].isFinal) {
-          const intent = parseVoiceCommand(currentTranscript);
-          if (intent) {
-            executeIntent(intent);
-          } else {
-            setStatusMessage(`Unrecognized command: "${currentTranscript}". Try "turn on light" or "fan speed 2"`);
-          }
+          handleProcessTranscript(currentTranscript);
         }
       };
 
@@ -317,19 +199,22 @@ export function VoiceControlModal({
       setIsListening(false);
       setStatusMessage('Could not activate microphone.');
     }
-  }, [isListening, parseVoiceCommand, executeIntent]);
+  }, [isListening, handleProcessTranscript]);
 
-  // Quick preset voice prompts
+  // Conversational English voice prompt chips
   const QUICK_COMMANDS = [
-    { label: '💡 Turn Light ON', text: 'turn on light' },
-    { label: '💡 Turn Light OFF', text: 'turn off light' },
-    { label: '🌿 Light ECO Mode', text: 'eco mode' },
-    { label: '🌀 Fan Speed 1', text: 'fan speed 1' },
-    { label: '🌀 Fan Speed 2', text: 'fan speed 2' },
-    { label: '🌀 Fan Speed 3', text: 'fan speed 3' },
-    { label: '🛑 Stop Fan', text: 'turn off fan' },
-    { label: '⏱️ Light 1m Timer', text: 'light timer 1 minute' },
-    { label: '⏱️ Fan 5m Timer', text: 'fan timer 5 minutes' },
+    { label: '💡 "Turn on the lamp"', text: 'turn on the lamp' },
+    { label: '🌑 "It\'s too dark here"', text: 'it is too dark in here' },
+    { label: '🛑 "Kill the lights"', text: 'kill the lights' },
+    { label: '🌿 "Save power / Eco mode"', text: 'save power' },
+    { label: '🔥 "It\'s hot, blast the fan"', text: 'it is hot in here' },
+    { label: '🌀 "Fan to maximum"', text: 'set fan to maximum' },
+    { label: '💨 "Gentle breeze / Speed 1"', text: 'set fan to low' },
+    { label: '❄️ "It\'s chilly, stop fan"', text: 'it is chilly stop fan' },
+    { label: '⏱️ "Turn off light in 5 minutes"', text: 'turn off light in 5 minutes' },
+    { label: '⏱️ "Fan timer for thirty seconds"', text: 'fan timer for thirty seconds' },
+    { label: '🗑️ "Cancel light timer"', text: 'cancel light timer' },
+    { label: '🌙 "Good night (All off)"', text: 'good night' },
   ];
 
   if (!isOpen) return null;
@@ -430,10 +315,7 @@ export function VoiceControlModal({
                 key={cmd.text}
                 type="button"
                 onClick={() => {
-                  const intent = parseVoiceCommand(cmd.text);
-                  if (intent) {
-                    executeIntent(intent);
-                  }
+                  handleProcessTranscript(cmd.text);
                 }}
                 className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-cyan-500/20 border border-slate-700/80 hover:border-cyan-400/50 text-[11px] text-slate-300 hover:text-cyan-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
               >

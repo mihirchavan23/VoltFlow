@@ -103,6 +103,43 @@ export function useDeviceCommands(
         id: tempId,
       };
 
+      // 1. Instant Optimistic UI State Update (0ms latency response)
+      if (onMockStateUpdate) {
+        if (options.device === 'light') {
+          if (options.action === 'on') {
+            onMockStateUpdate({ light_on: true, eco_mode: false });
+          } else if (options.action === 'off') {
+            onMockStateUpdate({ light_on: false, eco_mode: false });
+          } else if (options.action === 'eco') {
+            onMockStateUpdate({ eco_mode: true });
+          } else if (options.action === 'normal') {
+            onMockStateUpdate({ eco_mode: false });
+          } else if (options.action === 'set_timer') {
+            const isZero = (options.duration_seconds ?? 0) <= 0;
+            onMockStateUpdate({
+              light_timer_active: !isZero,
+              light_timer_remaining: isZero ? 0 : options.duration_seconds ?? 0,
+              light_timer_action: isZero ? 'OFF' : options.timer_action?.toUpperCase() ?? 'OFF',
+            });
+          }
+        } else if (options.device === 'fan') {
+          if (options.action === 'off') {
+            onMockStateUpdate({ fan_speed: 0 });
+          } else if (options.action === 'speed') {
+            onMockStateUpdate({ fan_speed: Number(options.value) || 0 });
+          } else if (options.action === 'set_timer') {
+            const isZero = (options.duration_seconds ?? 0) <= 0;
+            onMockStateUpdate({
+              fan_timer_active: !isZero,
+              fan_timer_remaining: isZero ? 0 : options.duration_seconds ?? 0,
+              fan_timer_action: isZero ? 'OFF' : options.timer_action?.toUpperCase() ?? 'OFF',
+            });
+          }
+        } else if (options.device === 'motor') {
+          onMockStateUpdate({ motor_on: options.action === 'on' });
+        }
+      }
+
       // Add to pending tracking immediately
       setPendingCommands((prev) => [optimisticCommand, ...prev]);
 
@@ -111,7 +148,6 @@ export function useDeviceCommands(
       // If mock mode or supabase not connected -> simulate ESP32 acknowledgement
       if (!supabase || isUsingMock) {
         setTimeout(() => {
-          // Simulate ESP32 completing command
           setPendingCommands((prev) => prev.filter((c) => c.id !== tempId));
           const completedCmd: DeviceCommand = {
             ...optimisticCommand,
@@ -119,48 +155,51 @@ export function useDeviceCommands(
             completed_at: new Date().toISOString(),
           };
           setRecentCommands((prev) => [completedCmd, ...prev.slice(0, 9)]);
-
-          // Update local mock state if callback provided
-          if (onMockStateUpdate) {
-            if (options.device === 'light') {
-              if (options.action === 'on') {
-                onMockStateUpdate({ light_on: true, eco_mode: false });
-              } else if (options.action === 'off') {
-                onMockStateUpdate({ light_on: false, eco_mode: false });
-              } else if (options.action === 'eco') {
-                onMockStateUpdate({ eco_mode: true });
-              } else if (options.action === 'normal') {
-                onMockStateUpdate({ eco_mode: false });
-              } else if (options.action === 'set_timer') {
-                onMockStateUpdate({
-                  light_timer_active: true,
-                  light_timer_remaining: options.duration_seconds ?? 0,
-                  light_timer_action: options.timer_action?.toUpperCase() ?? 'OFF',
-                });
-              }
-            } else if (options.device === 'fan') {
-              if (options.action === 'off') {
-                onMockStateUpdate({ fan_speed: 0 });
-              } else if (options.action === 'speed') {
-                onMockStateUpdate({ fan_speed: Number(options.value) || 0 });
-              } else if (options.action === 'set_timer') {
-                onMockStateUpdate({
-                  fan_timer_active: true,
-                  fan_timer_remaining: options.duration_seconds ?? 0,
-                  fan_timer_action: options.timer_action?.toUpperCase() ?? 'OFF',
-                });
-              }
-            } else if (options.device === 'motor') {
-              onMockStateUpdate({ motor_on: options.action === 'on' });
-            }
-          }
-        }, 800);
+        }, 300);
 
         setIsSending(false);
         return { success: true, command: optimisticCommand };
       }
 
       try {
+        // Fast-path: Update Supabase device_state in parallel so all clients sync in milliseconds
+        const statePatch: Partial<DeviceState> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (options.device === 'light') {
+          if (options.action === 'on') {
+            statePatch.light_on = true;
+            statePatch.eco_mode = false;
+          } else if (options.action === 'off') {
+            statePatch.light_on = false;
+            statePatch.eco_mode = false;
+          } else if (options.action === 'eco') {
+            statePatch.eco_mode = true;
+          } else if (options.action === 'normal') {
+            statePatch.eco_mode = false;
+          } else if (options.action === 'set_timer') {
+            const isZero = (options.duration_seconds ?? 0) <= 0;
+            statePatch.light_timer_active = !isZero;
+            statePatch.light_timer_remaining = isZero ? 0 : options.duration_seconds ?? 0;
+            statePatch.light_timer_action = isZero ? 'OFF' : options.timer_action?.toUpperCase() ?? 'OFF';
+          }
+        } else if (options.device === 'fan') {
+          if (options.action === 'off') {
+            statePatch.fan_speed = 0;
+          } else if (options.action === 'speed') {
+            statePatch.fan_speed = Number(options.value) || 0;
+          } else if (options.action === 'set_timer') {
+            const isZero = (options.duration_seconds ?? 0) <= 0;
+            statePatch.fan_timer_active = !isZero;
+            statePatch.fan_timer_remaining = isZero ? 0 : options.duration_seconds ?? 0;
+            statePatch.fan_timer_action = isZero ? 'OFF' : options.timer_action?.toUpperCase() ?? 'OFF';
+          }
+        }
+
+        // Fire fast-path state update (non-blocking)
+        supabase.from('device_state').update(statePatch).eq('device_id', deviceId).then();
+
+        // Enqueue command for ESP32 hardware execution
         const { data, error } = await supabase
           .from('device_commands')
           .insert(commandPayload)

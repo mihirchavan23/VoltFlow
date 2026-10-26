@@ -14,7 +14,6 @@ import { generateMockEvents, INITIAL_MOCK_STATE } from '@/lib/supabase/mockData'
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { CredentialsModal } from '@/components/layout/CredentialsModal';
-import { ToastContainer } from '@/components/ui/Toast';
 
 // Controls components
 import { LightControlCard } from '@/components/controls/LightControlCard';
@@ -50,23 +49,15 @@ export default function SmartHomePage() {
   const [isVoiceControlOpen, setIsVoiceControlOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // Toasts
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
+  // Notifications disabled per user request
   const addToast = useCallback(
     (type: ToastMessage['type'], title: string, message: string) => {
-      const id = `${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      setToasts((prev) => [...prev, { id, type, title, message, timestamp: Date.now() }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
+      if (type === 'error') {
+        console.warn(`[VoltFlow Error] ${title}: ${message}`);
+      }
     },
     []
   );
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
 
   // Energy settings state
   const [energySettings, setEnergySettings] = useState<EnergySettings>(DEFAULT_ENERGY_SETTINGS);
@@ -514,9 +505,6 @@ export default function SmartHomePage() {
         <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#040711] animate-ping" />
         <span className="sr-only">Voice Assistant</span>
       </button>
-
-      {/* Toast Notification Container */}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

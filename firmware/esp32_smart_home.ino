@@ -77,7 +77,7 @@ String fanTimerAction = "";
 
 // Network Polling Intervals
 unsigned long lastCommandPoll = 0;
-const unsigned long COMMAND_POLL_INTERVAL = 1500; // Poll commands every 1.5s
+const unsigned long COMMAND_POLL_INTERVAL = 500; // Ultra-fast command polling (0.5s)
 
 unsigned long lastHeartbeat = 0;
 const unsigned long HEARTBEAT_INTERVAL = 10000; // Upsert state every 10s
