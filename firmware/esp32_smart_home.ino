@@ -56,6 +56,8 @@ bool motorOn = false;
 
 // Motion (PIR) State
 unsigned long motionStartTime = 0;
+unsigned long lastTurnOffTime = 0;
+bool pirArmed = false; // Requires sensor to be LOW and cooldown elapsed before triggering
 
 // Light Timer State
 bool lightTimerActive = false;
@@ -156,11 +158,15 @@ void setup() {
 
   // Pin modes
   pinMode(LED_PIN, OUTPUT);
-  pinMode(PIR_PIN, INPUT);
+  pinMode(PIR_PIN, INPUT_PULLDOWN); // Anchors pin to GND to eliminate floating pin EMI noise
   pinMode(MOTOR_PIN, OUTPUT);
 
   digitalWrite(LED_PIN, LOW);
   digitalWrite(MOTOR_PIN, LOW);
+  ledOn = false;
+  ecoMode = true;
+  pirArmed = false;
+  lastTurnOffTime = millis();
 
 // Setup Fan PWM using LEDC API
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
@@ -189,25 +195,36 @@ void loop() {
   unsigned long currentMillis = millis();
 
   // --------------------------------------------------------------------------
-  // A. ECO MODE PIR MOTION LOGIC (Exact Reference Logic)
+  // A. ECO MODE PIR MOTION LOGIC (Ghost Trigger & Feedback Protected)
   // --------------------------------------------------------------------------
   if (ecoMode) {
     int motion = digitalRead(PIR_PIN);
 
-    // 1. Motion detected when light was OFF -> Turn ON & record start time
-    if (motion == HIGH && !ledOn) {
-      digitalWrite(LED_PIN, HIGH);
-      ledOn = true;
-      motionStartTime = millis();
-      Serial.println("[PIR] Motion detected -> Light turned ON");
-      logDeviceEvent("light", "motion_on", 1, "PIR");
-      sendHeartbeatAndState();
+    // Re-arm trigger ONLY after sensor has returned to LOW AND 2.5s cooldown has elapsed
+    if (!pirArmed && motion == LOW && (millis() - lastTurnOffTime >= 2500)) {
+      pirArmed = true;
+    }
+
+    // 1. Motion detected when light was OFF & sensor is armed -> Turn ON
+    if (motion == HIGH && !ledOn && pirArmed) {
+      delay(40); // 40ms noise filter to eliminate microsecond Wi-Fi/RF spikes
+      if (digitalRead(PIR_PIN) == HIGH) {
+        digitalWrite(LED_PIN, HIGH);
+        ledOn = true;
+        motionStartTime = millis();
+        pirArmed = false; // Disarm until this cycle turns OFF and sensor returns to LOW
+        Serial.println("[PIR] Genuine motion detected -> Light turned ON (5s timer)");
+        logDeviceEvent("light", "motion_on", 1, "PIR");
+        sendHeartbeatAndState();
+      }
     }
 
     // 2. Auto-turn OFF light after 5 seconds
     if (ledOn && (millis() - motionStartTime >= 5000)) {
       digitalWrite(LED_PIN, LOW);
       ledOn = false;
+      lastTurnOffTime = millis(); // Starts 2.5s cooldown lockout (blocks 2-second ghost re-trigger)
+      pirArmed = false;           // Must observe sensor physically LOW before next trigger
       Serial.println("[PIR] 5 seconds elapsed -> Light turned OFF");
       logDeviceEvent("light", "motion_off", 0, "PIR");
       sendHeartbeatAndState();
@@ -420,6 +437,8 @@ void executeCommand(String cmdId, String device, String action, int value,
       ecoMode = true;
       ledOn = false;
       digitalWrite(LED_PIN, LOW);
+      lastTurnOffTime = millis();
+      pirArmed = false; // Sensor must be observed LOW before a motion trigger occurs
       logDeviceEvent("light", "mode_change", 1, "web");
       Serial.println("ECO Mode enabled - LED set to OFF, waiting for PIR motion");
     } else if (action == "normal") {
