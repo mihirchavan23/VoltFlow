@@ -14,9 +14,12 @@ import {
   Settings,
   Zap,
   Mic,
+  LogOut,
+  UserCheck,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { TabType } from '@/types/smartHome.types';
+import { useAuth } from '@/lib/auth/authContext';
 
 interface HeaderProps {
   deviceId: string;
@@ -51,6 +54,8 @@ export function Header({
   onOpenEnergySettings,
   onOpenVoiceControl,
 }: HeaderProps) {
+  const { user, logout } = useAuth();
+
   const tabs = [
     {
       id: 'controls' as TabType,
@@ -180,6 +185,39 @@ export function Header({
                 <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 drop-shadow-[0_0_6px_rgba(6,182,212,0.5)]" />
               )}
             </button>
+
+            {/* Authenticated User & Logout */}
+            {user && (
+              <div className="flex items-center gap-1.5 pl-1 border-l border-slate-200 dark:border-slate-800">
+                <div
+                  className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs"
+                  title={`Signed in as ${user.name} (${user.email})`}
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-cyan-500" />
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
+                    {user.username}
+                  </span>
+                  <span
+                    className={`text-[9px] font-mono px-1 rounded uppercase font-bold ${
+                      user.role === 'admin'
+                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                        : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    }`}
+                  >
+                    {user.role}
+                  </span>
+                </div>
+
+                <button
+                  onClick={logout}
+                  title="Sign Out from VoltFlow"
+                  className="p-1.5 sm:p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-all cursor-pointer shadow-sm flex items-center gap-1"
+                >
+                  <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden lg:inline text-[11px] font-semibold">Exit</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
