@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Sliders, BarChart3, History, Settings, Shield, Flame, Activity, Sun, Moon } from 'lucide-react';
+import { Sliders, BarChart3, History, Settings, Shield, Flame, Activity, Sun, Moon, LogOut, UserCheck } from 'lucide-react';
 import { TabType } from '@/types/smartHome.types';
+import { useAuth } from '@/lib/auth/authContext';
 
 interface SidebarProps {
   currentTab: TabType;
@@ -25,6 +26,8 @@ export function Sidebar({
   theme,
   onToggleTheme,
 }: SidebarProps) {
+  const { user, logout } = useAuth();
+
   const navItems = [
     {
       id: 'controls' as TabType,
@@ -125,6 +128,21 @@ export function Sidebar({
               </div>
               <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800">
                 {theme}
+              </span>
+            </button>
+          )}
+
+          {user && (
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out ({user.username})</span>
+              </div>
+              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/40 font-bold">
+                {user.role}
               </span>
             </button>
           )}

@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     'Complete IoT smart home remote control, fan speed regulator, PIR eco mode, hardware timers, and electricity usage monitoring powered by ESP32 and Supabase.',
 };
 
+import { AuthProvider } from '@/lib/auth/authContext';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen selection:bg-blue-500 selection:text-white font-sans">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

@@ -27,9 +27,12 @@ import { DeviceEventHistory } from '@/components/usage/DeviceEventHistory';
 import { EnergySettingsModal } from '@/components/usage/EnergySettingsModal';
 import { VoiceControlModal } from '@/components/voice/VoiceControlModal';
 
-import { Sliders, BarChart3, ShieldCheck, Sparkles, AlertCircle, Mic } from 'lucide-react';
+import { Sliders, BarChart3, ShieldCheck, Sparkles, AlertCircle, Mic, Zap } from 'lucide-react';
+import { useAuth } from '@/lib/auth/authContext';
+import LoginPage from '@/app/login/page';
 
 export default function SmartHomePage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { theme, toggleTheme, isDark, mounted } = useTheme();
 
   // Active Device ID state (defaults to esp32-home-01)
@@ -258,6 +261,26 @@ export default function SmartHomePage() {
     refreshEvents();
     addToast('info', 'Synchronizing', 'Fetched latest state and history from Supabase.');
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-slate-100">
+        <div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[2px] shadow-[0_0_25px_rgba(6,182,212,0.4)] animate-pulse mb-4">
+          <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center">
+            <Zap className="w-7 h-7 text-cyan-400" />
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 font-mono tracking-wider animate-pulse">
+          INITIALIZING VOLTFLOW SECURE SESSION...
+        </p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 transition-colors duration-200 cyber-grid relative">
       {/* Futuristic Ambient Glow Background Orbs */}
